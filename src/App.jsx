@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 
 const CATEGORIES = ['College', 'Home', 'Personal']
+const FILTERS = ['All', 'Active', 'Done']
 const STORAGE_KEY = 'student-todo'
 
 function load() {
@@ -21,6 +22,7 @@ const today = () => new Date().toLocaleDateString('en-CA')
 export default function App() {
   const [tasks, setTasks] = useState(() => load().tasks)
   const [tab, setTab] = useState(() => load().tab)
+  const [filter, setFilter] = useState('All')
   const [leaving, setLeaving] = useState(null)
 
   useEffect(() => {
@@ -47,6 +49,7 @@ export default function App() {
   // undone first, then earliest due date, undated last
   const visible = tasks
     .filter((t) => t.category === tab)
+    .filter((t) => filter === 'All' || (filter === 'Done') === t.done)
     .sort((a, b) => a.done - b.done || (a.due || '9999').localeCompare(b.due || '9999'))
 
   return (
@@ -71,7 +74,15 @@ export default function App() {
         <button>Add</button>
       </form>
 
-      <ul key={tab} className="stack">
+      <div className="filters">
+        {FILTERS.map((f) => (
+          <button key={f} aria-pressed={f === filter} onClick={() => setFilter(f)}>
+            {f}
+          </button>
+        ))}
+      </div>
+
+      <ul key={tab + filter} className="stack">
         {visible.map((t, i) => (
           <li
             key={t.id}
@@ -103,7 +114,11 @@ export default function App() {
             </button>
           </li>
         ))}
-        {visible.length === 0 && <li className="empty">Nothing here. Add a task above.</li>}
+        {visible.length === 0 && (
+          <li className="empty">
+            {filter === 'All' ? 'Nothing here. Add a task above.' : `No ${filter.toLowerCase()} tasks.`}
+          </li>
+        )}
       </ul>
     </main>
   )

@@ -14,11 +14,11 @@ There is no linter and no test suite. Verify changes by running the dev server a
 
 A deliberately tiny React 19 + Vite app (plain JavaScript, no router, no state library, no animation library). Essentially all logic lives in `src/App.jsx`; `src/main.jsx` only mounts it and imports `src/App.css`.
 
-- **State:** `tasks` (`{ id, title, due, done, category }`) and the active `tab`. The visible list is derived on each render: filter by `category === tab`, then sort (undone first, then earliest due date, undated last). Don't store the derived list.
+- **State:** `tasks` (`{ id, title, due, done, category }`), the active `tab` (persisted), and the All/Active/Done `filter` (view-only, resets to All on reload). The visible list is derived on each render: filter by `category === tab`, then by `filter`, then sort (undone first, then earliest due date, undated last). Don't store the derived list.
 - **Categories:** the `CATEGORIES` array at the top of `App.jsx` is the single source of truth for the tabs. Adding or renaming one is a one-line change; tasks keep their category string, so removing a category hides its tasks without deleting them.
 - **Persistence:** both `tasks` and `tab` are saved as one JSON blob under the `student-todo` localStorage key. `load()` runs through lazy `useState` initialisers and falls back to empty/default on corrupt or blocked storage. Keep the try/catch around reads and writes. If the stored shape changes, `load()` must still accept the old shape.
 - **Animations are CSS-only and coupled to the JSX:**
-  - The `<ul>` is keyed by `tab`, so switching tabs remounts it and replays the `stack-in` keyframe. Removing that `key` silently kills the tab-switch animation.
+  - The `<ul>` is keyed by `tab + filter`, so switching tabs or filters remounts it and replays the `stack-in` keyframe. Removing that `key` silently kills the switch animation.
   - Each card gets `style={{ '--i': index }}` and the CSS staggers with `animation-delay: calc(var(--i) * 50ms)`.
   - Deleting does not remove the task immediately: it sets `leaving`, which adds the `stack-out` class, and the task is removed in `onAnimationEnd` when `e.animationName === 'stack-out'`. If you rename the keyframe, update that string in the JSX too.
   - Under `prefers-reduced-motion` the CSS disables animations, so no `animationend` would ever fire. The delete handler therefore checks the media query in JS and removes the task directly. Keep both sides in sync.
