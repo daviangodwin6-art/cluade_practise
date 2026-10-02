@@ -4,7 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-- `npm run dev`: Vite dev server on port 5173 (also configured in `.claude/launch.json` for the preview pane)
+- `npm run server`: the API on `127.0.0.1:3001`. Run it in a second terminal next to `npm run dev`; the app shows an error banner and can't load tasks without it.
+- `npm run dev`: Vite dev server on port 5173, proxying `/api` to the API (also configured in `.claude/launch.json` for the preview pane, which does not start the API)
 - `npm run build`: production build into `dist/`
 - `npm run preview`: serve the built `dist/`
 
@@ -12,11 +13,12 @@ There is no linter and no test suite. Verify changes by running the dev server a
 
 ## Architecture
 
-A deliberately tiny React 19 + Vite app (plain JavaScript, no router, no state library, no animation library). Essentially all logic lives in `src/App.jsx`; `src/main.jsx` only mounts it and imports `src/App.css`.
+A deliberately tiny React 19 + Vite app (plain JavaScript, no router, no state library, no animation library) plus a small Express API. Essentially all UI logic lives in `src/App.jsx` (`src/main.jsx` only mounts it and imports `src/App.css`); the API is the single file `server/index.js`.
 
-- **State:** `tasks` (`{ id, title, due, done, category }`), the active `tab` (persisted), and the All/Active/Done `filter` (view-only, resets to All on reload). The visible list is derived on each render: filter by `category === tab`, then by `filter`, then sort (undone first, then earliest due date, undated last). Don't store the derived list.
+- **API (`server/index.js`):** `GET/POST /api/tasks`, `PATCH/DELETE /api/tasks/:id`. Tasks are held in memory and written to `server/data/tasks.json` (git-ignored) after every change, via write-then-rename. A corrupt file crashes startup on purpose. It binds to `127.0.0.1` only because there is no auth. The server validates input (title 1-200 chars, `due` is `YYYY-MM-DD` or empty, `done` is boolean) and generates the `id`. `CATEGORIES` is not known to the server; it only requires a non-empty category string.
+- **State:** `tasks` (`{ id, title, due, done, category }`, loaded from the API), the active `tab` (persisted in the browser), and the All/Active/Done `filter` (view-only, resets to All on reload). The visible list is derived on each render: filter by `category === tab`, then by `filter`, then sort (undone first, then earliest due date, undated last). Don't store the derived list.
 - **Categories:** the `CATEGORIES` array at the top of `App.jsx` is the single source of truth for the tabs. Adding or renaming one is a one-line change; tasks keep their category string, so removing a category hides its tasks without deleting them.
-- **Persistence:** both `tasks` and `tab` are saved as one JSON blob under the `student-todo` localStorage key. `load()` runs through lazy `useState` initialisers and falls back to empty/default on corrupt or blocked storage. Keep the try/catch around reads and writes. If the stored shape changes, `load()` must still accept the old shape.
+- **Persistence:** tasks live on the server. `App.jsx` calls the API through the `api()` helper and updates state from each response (no optimistic updates). Every call goes through `run()`, which shows an error banner on failure and leaves the list unchanged; a failed delete also clears `leaving` so the card reappears. Only `tab` is stored in the browser (`student-todo` localStorage key, `{ tab }`); `loadTab()` falls back to the default on corrupt or blocked storage, so keep its try/catch. Tasks stored in localStorage by earlier versions are ignored, not migrated.
 - **Animations are CSS-only and coupled to the JSX:**
   - The `<ul>` is keyed by `tab + filter`, so switching tabs or filters remounts it and replays the `stack-in` keyframe. Removing that `key` silently kills the switch animation.
   - Each card gets `style={{ '--i': index }}` and the CSS staggers with `animation-delay: calc(var(--i) * 50ms)`.

@@ -4,47 +4,83 @@ const CATEGORIES = ['College', 'Home', 'Personal']
 const FILTERS = ['All', 'Active', 'Done']
 const STORAGE_KEY = 'student-todo'
 
-function load() {
+// only the open tab lives in the browser now; tasks live on the server
+function loadTab() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY))
-    return {
-      tasks: Array.isArray(saved?.tasks) ? saved.tasks : [],
-      tab: CATEGORIES.includes(saved?.tab) ? saved.tab : CATEGORIES[0],
-    }
+    return CATEGORIES.includes(saved?.tab) ? saved.tab : CATEGORIES[0]
   } catch {
-    return { tasks: [], tab: CATEGORIES[0] }
+    return CATEGORIES[0]
   }
+}
+
+async function api(path, options) {
+  const res = await fetch('/api/tasks' + path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...options,
+  })
+  if (!res.ok) throw new Error(res.status)
+  return res.status === 204 ? null : res.json()
 }
 
 // local date as YYYY-MM-DD, same format <input type="date"> gives us
 const today = () => new Date().toLocaleDateString('en-CA')
 
 export default function App() {
-  const [tasks, setTasks] = useState(() => load().tasks)
-  const [tab, setTab] = useState(() => load().tab)
+  const [tasks, setTasks] = useState([])
+  const [tab, setTab] = useState(loadTab)
   const [filter, setFilter] = useState('All')
   const [leaving, setLeaving] = useState(null)
+  const [error, setError] = useState('')
+
+  // run a server call; on failure show a message and leave the list as it was
+  const run = (fn) =>
+    fn().then(
+      () => setError(''),
+      () => setError("Couldn't reach the server, so that change wasn't saved. Is it running?"),
+    )
+
+  useEffect(() => {
+    run(async () => setTasks(await api('')))
+  }, [])
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ tasks, tab }))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ tab }))
     } catch {
       // storage blocked or full: app still works for this session
     }
-  }, [tasks, tab])
+  }, [tab])
 
   function addTask(e) {
     e.preventDefault()
     const form = e.target
     const title = form.title.value.trim()
     if (!title) return
-    setTasks([...tasks, { id: crypto.randomUUID(), title, due: form.due.value, done: false, category: tab }])
-    form.reset()
-    form.title.focus()
+    run(async () => {
+      const task = await api('', { method: 'POST', body: JSON.stringify({ title, due: form.due.value, category: tab }) })
+      setTasks((ts) => [...ts, task])
+      form.reset()
+      form.title.focus()
+    })
   }
 
-  const toggle = (id) => setTasks(tasks.map((t) => (t.id === id ? { ...t, done: !t.done } : t)))
-  const remove = (id) => setTasks(tasks.filter((t) => t.id !== id))
+  const toggle = (t) =>
+    run(async () => {
+      const updated = await api(`/${t.id}`, { method: 'PATCH', body: JSON.stringify({ done: !t.done }) })
+      setTasks((ts) => ts.map((x) => (x.id === t.id ? updated : x)))
+    })
+
+  const remove = (id) =>
+    run(async () => {
+      try {
+        await api(`/${id}`, { method: 'DELETE' })
+      } catch (err) {
+        setLeaving(null) // bring the card back, it was never deleted
+        throw err
+      }
+      setTasks((ts) => ts.filter((t) => t.id !== id))
+    })
 
   // undone first, then earliest due date, undated last
   const visible = tasks
@@ -55,6 +91,12 @@ export default function App() {
   return (
     <main>
       <h1>Student To-Do</h1>
+
+      {error && (
+        <p role="alert" className="error">
+          {error}
+        </p>
+      )}
 
       <div className="tabs" role="tablist">
         {CATEGORIES.map((c) => {
@@ -98,7 +140,7 @@ export default function App() {
             onAnimationEnd={(e) => e.animationName === 'stack-out' && remove(t.id)}
           >
             <label>
-              <input type="checkbox" checked={t.done} onChange={() => toggle(t.id)} />
+              <input type="checkbox" checked={t.done} onChange={() => toggle(t)} />
               <span className="title">{t.title}</span>
             </label>
             {t.due && <time dateTime={t.due}>{t.due}</time>}

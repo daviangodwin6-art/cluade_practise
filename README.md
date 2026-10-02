@@ -9,7 +9,7 @@ A simple to-do list web app for students, built with React and Vite. Tasks are g
 - Tick tasks off (they sink to the bottom) or delete them
 - Sorted by due date; overdue tasks turn red
 - Stacked-card animations (disabled if your system prefers reduced motion)
-- Tasks and the open tab are saved in your browser's `localStorage`, so they survive a reload
+- Tasks are stored on a small Express server (a JSON file), so they survive reloads and are the same in every browser; the open tab is remembered in the browser
 
 ## Setup
 
@@ -28,19 +28,26 @@ Requires [Node.js](https://nodejs.org/) 18 or newer (developed on Node 24).
    npm install
    ```
 
-3. Start the dev server:
+3. Start the API server (stores tasks in `server/data/tasks.json`):
+
+   ```bash
+   npm run server
+   ```
+
+4. In a second terminal, start the dev server:
 
    ```bash
    npm run dev
    ```
 
-4. Open http://localhost:5173 in your browser.
+5. Open http://localhost:5173 in your browser.
 
 ## Scripts
 
 | Command | What it does |
 | --- | --- |
-| `npm run dev` | Start the dev server with hot reload |
+| `npm run server` | Start the API on http://127.0.0.1:3001 |
+| `npm run dev` | Start the dev server with hot reload (proxies `/api` to the API) |
 | `npm run build` | Build the production site into `dist/` |
 | `npm run preview` | Serve the built `dist/` locally |
 
@@ -51,14 +58,25 @@ index.html        page shell
 src/main.jsx      React entry point
 src/App.jsx       the whole app: tabs, add form, task list
 src/App.css       layout, theme, card stack and animations
+server/index.js   Express API: GET/POST /api/tasks, PATCH/DELETE /api/tasks/:id
 ```
+
+## API
+
+| Method | Path | Body | Result |
+| --- | --- | --- | --- |
+| `GET` | `/api/tasks` | none | `200` all tasks |
+| `POST` | `/api/tasks` | `{ title, category, due? }` | `201` the new task, `400` if invalid |
+| `PATCH` | `/api/tasks/:id` | any of `{ done, title, due }` | `200` the task, `400` invalid, `404` unknown id |
+| `DELETE` | `/api/tasks/:id` | none | `204`, or `404` unknown id |
 
 ## Customising
 
 - **Categories:** edit the `CATEGORIES` array at the top of `src/App.jsx`. Tasks in a removed category stay in storage but are no longer shown.
-- **Reset data:** clear the site's `localStorage` (key `student-todo`) in your browser's dev tools.
+- **Reset data:** stop the server and delete `server/data/tasks.json`.
 
 ## Limitations
 
-- Data lives only in one browser on one device; there is no account or sync.
+- No accounts: there is one shared task list, and the API only listens on localhost (no auth).
+- Tasks saved in the browser by earlier versions are not imported.
 - Tasks can't be edited in place; delete and re-add instead.
