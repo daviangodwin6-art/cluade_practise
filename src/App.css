@@ -6,6 +6,8 @@
   --accent: #4f46e5;
   --danger: #dc2626;
   --line: #e5e3da;
+  --green: #16a34a;
+  --track: #d1d5db;
   font-family: system-ui, sans-serif;
   color: var(--text);
   background: var(--bg);
@@ -20,6 +22,8 @@
     --accent: #8b85ff;
     --danger: #f87171;
     --line: #2f333d;
+    --green: #4ade80;
+    --track: #3a3f4b;
   }
 }
 
@@ -32,7 +36,7 @@ body {
 }
 
 main {
-  max-width: 560px;
+  max-width: 1040px;
   margin: 0 auto;
   padding: 24px 16px 64px;
 }
@@ -91,6 +95,39 @@ input {
   background: var(--accent);
   color: var(--card);
   font-size: 0.75rem;
+}
+
+/* category tools */
+.cat-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: -8px 0 16px;
+}
+
+.cat-tools button {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.cat-tools button:hover:not(:disabled) {
+  color: var(--accent);
+}
+
+.cat-tools button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cat-form button[type='button'] {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--muted);
 }
 
 /* add form */
@@ -258,9 +295,208 @@ form button {
   padding: 32px 0;
 }
 
+/* task list on the left; ring and calendar stacked in a sticky right column */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 24px;
+  align-items: start;
+}
+
+.side {
+  position: sticky;
+  top: 24px;
+  display: grid;
+  gap: 16px;
+}
+
+.progress {
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.progress svg {
+  grid-area: 1 / 1;
+  width: 100%;
+  max-width: 160px;
+  transform: rotate(-90deg); /* start filling from the top */
+}
+
+.progress circle {
+  fill: none;
+  stroke-width: 10;
+}
+
+.progress .track {
+  stroke: var(--track);
+}
+
+.progress .fill {
+  stroke: var(--green);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.6s ease;
+}
+
+.progress-text {
+  grid-area: 1 / 1;
+  display: grid;
+  gap: 2px;
+  text-align: center;
+}
+
+.progress-text strong {
+  font-size: 1.6rem;
+}
+
+.progress-text span {
+  font-size: 0.75rem;
+  color: var(--muted);
+  max-width: 90px;
+}
+
+@media (max-width: 640px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .side {
+    display: contents; /* ring above the list, calendar below it */
+    position: static;
+  }
+
+  .progress {
+    order: -1;
+  }
+
+  .progress svg {
+    max-width: 130px;
+  }
+}
+
+/* calendar */
+.calendar {
+  padding: 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.cal-head button,
+.cal-today {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 2px 10px;
+  cursor: pointer;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  text-align: center;
+}
+
+.cal-wd {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.cal-day {
+  position: relative;
+  aspect-ratio: 1;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.cal-day.today {
+  border-color: var(--accent);
+}
+
+.cal-day.picked {
+  background: var(--accent);
+  color: var(--card);
+}
+
+.dot {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  border-radius: 50%;
+  background: var(--danger);
+}
+
+.dot.all-done {
+  background: var(--green);
+}
+
+.cal-today {
+  margin-top: 8px;
+  font-size: 0.8rem;
+}
+
+.cal-detail h2 {
+  font-size: 0.95rem;
+  margin: 12px 0 4px;
+}
+
+.cal-detail ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.cal-detail li {
+  display: grid;
+  gap: 2px;
+  font-size: 0.9rem;
+}
+
+.cal-detail li.done .title {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.cal-detail li.overdue .title {
+  color: var(--danger);
+}
+
+.cal-detail small {
+  color: var(--muted);
+  padding-left: 24px;
+}
+
+.cal-detail .empty {
+  padding: 8px 0;
+  font-size: 0.85rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .card {
     animation: none;
+    transition: none;
+  }
+
+  .progress .fill {
     transition: none;
   }
 }

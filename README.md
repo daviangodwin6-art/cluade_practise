@@ -4,7 +4,9 @@ A simple to-do list web app for students, built with React and Vite. Tasks are g
 
 ## Features
 
-- Category tabs with a badge counting unfinished tasks
+- Category tabs with a badge counting unfinished tasks; add, rename or delete categories from the links under the tabs (a category that still has tasks can't be deleted, and the last one is kept)
+- A circular progress ring beside the list (green fill on a grey track) shows how many tasks in the open category are done, and fills as you complete them
+- A month calendar on the right (always visible, all categories) marks days that have tasks due; click a day to see its tasks, tick them off, or step through months
 - Add tasks with an optional due date
 - Tick tasks off (they sink to the bottom) or delete them
 - Sorted by due date; overdue tasks turn red
@@ -74,11 +76,11 @@ server/index.js   Express API for tasks and categories
 | `PATCH` | `/api/categories/:name` | `{ name }` | `200` `{ name }`; tasks in it move to the new name. `404` unknown, `400` invalid, `409` name taken |
 | `DELETE` | `/api/categories/:name` | none | `204`, `404` unknown, `409` if it still has tasks |
 
-Category names with spaces must be URL-encoded (`/api/categories/Fitness%20Club`). Creating a task now requires an existing category. The React app doesn't use the category endpoints yet: its tabs still come from `CATEGORIES` in `src/App.jsx`, so renaming or deleting one of the three defaults through the API will make that tab's "Add" fail until the app is updated.
+Category names with spaces must be URL-encoded (`/api/categories/Fitness%20Club`). Creating a task requires an existing category.
 
 ## Customising
 
-- **Categories:** edit the `CATEGORIES` array at the top of `src/App.jsx`. Tasks in a removed category stay in storage but are no longer shown.
+- **Categories:** manage them in the app, or edit the default list in `server/index.js` (used only when `categories.json` doesn't exist yet).
 - **Reset data:** stop the server and delete `server/data/tasks.json` (and `categories.json` to restore the default categories).
 
 ## Limitations
