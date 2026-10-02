@@ -93,6 +93,39 @@ input {
   font-size: 0.75rem;
 }
 
+/* category tools */
+.cat-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: -8px 0 16px;
+}
+
+.cat-tools button {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.cat-tools button:hover:not(:disabled) {
+  color: var(--accent);
+}
+
+.cat-tools button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cat-form button[type='button'] {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+
 /* add form */
 form {
   display: flex;
