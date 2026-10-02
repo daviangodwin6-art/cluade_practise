@@ -15,13 +15,12 @@ Read `CLAUDE.md` first. It describes the architecture and the coupling you must 
 
 ## 1. Plan
 - Work out which files change. Climb the ladder: reuse what exists, add the least code that works. No new dependency for something a few lines can do.
-- If the feature adds or changes API endpoints, list them (method, path, body, status codes) and show them to the user **before coding**. Wait for a yes.
-- For anything else, give a 3-5 line plan and continue unless the user objects.
+- Show the user a short plan (files, approach, and any API endpoints with method, path, body, status codes) and ask whether they want any changes. **Always wait for their answer before coding**, even for small features. Apply the requested changes, then proceed.
 
 ## 2. Branch
 - Check `git status`. If there are uncommitted changes that aren't part of this feature, stop and ask what to do with them; never fold unrelated work into the feature commit.
 - Base branch is `main` unless the user names another. Confirm it shares history with your work: `git fetch origin main && git merge-base HEAD origin/main`. If there is no common history, stop and tell the user.
-- Create `feature/<short-kebab-name>` from the base. Never commit to `main` or `master`.
+- Create `feature/<short-kebab-name>` from the base. Never commit or push to `main` or `master`; the feature branch reaches `main` only through a reviewed pull request.
 
 ## 3. Build
 - Edit only what the feature needs. Match the surrounding code's style and comment density.
@@ -41,7 +40,7 @@ Report anything you could not verify (for example screenshots that timed out). D
 ## 5. Commit and push
 - Stage files by name (not `git add -A`) and never stage `server/data/`, `dist/` or `.claude/settings.local.json`.
 - One commit with a message that says what changed and why. End it with the attribution line from the session's system reminder, if there is one.
-- `git push -u origin <branch>`. If the connection times out, retry once before reporting a failure.
+- Check `git branch --show-current` is not `main`/`master`, then `git push -u origin <branch>`. If the connection times out, retry once before reporting a failure.
 
 ## 6. Pull request
 - If `gh` is installed and logged in: `gh pr create --base <base> --title ... --body ...` (not a draft). The body covers what changed, why, how it was tested, and anything a reviewer should know. Print the PR URL.
