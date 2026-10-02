@@ -58,7 +58,7 @@ index.html        page shell
 src/main.jsx      React entry point
 src/App.jsx       the whole app: tabs, add form, task list
 src/App.css       layout, theme, card stack and animations
-server/index.js   Express API: GET/POST /api/tasks, PATCH/DELETE /api/tasks/:id
+server/index.js   Express API for tasks and categories
 ```
 
 ## API
@@ -69,11 +69,17 @@ server/index.js   Express API: GET/POST /api/tasks, PATCH/DELETE /api/tasks/:id
 | `POST` | `/api/tasks` | `{ title, category, due? }` | `201` the new task, `400` if invalid |
 | `PATCH` | `/api/tasks/:id` | any of `{ done, title, due }` | `200` the task, `400` invalid, `404` unknown id |
 | `DELETE` | `/api/tasks/:id` | none | `204`, or `404` unknown id |
+| `GET` | `/api/categories` | none | `200` array of category names |
+| `POST` | `/api/categories` | `{ name }` | `201` `{ name }`, `400` invalid (1-40 chars), `409` already exists (case-insensitive) |
+| `PATCH` | `/api/categories/:name` | `{ name }` | `200` `{ name }`; tasks in it move to the new name. `404` unknown, `400` invalid, `409` name taken |
+| `DELETE` | `/api/categories/:name` | none | `204`, `404` unknown, `409` if it still has tasks |
+
+Category names with spaces must be URL-encoded (`/api/categories/Fitness%20Club`). Creating a task now requires an existing category. The React app doesn't use the category endpoints yet: its tabs still come from `CATEGORIES` in `src/App.jsx`, so renaming or deleting one of the three defaults through the API will make that tab's "Add" fail until the app is updated.
 
 ## Customising
 
 - **Categories:** edit the `CATEGORIES` array at the top of `src/App.jsx`. Tasks in a removed category stay in storage but are no longer shown.
-- **Reset data:** stop the server and delete `server/data/tasks.json`.
+- **Reset data:** stop the server and delete `server/data/tasks.json` (and `categories.json` to restore the default categories).
 
 ## Limitations
 
