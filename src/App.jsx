@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 
 const FILTERS = ['All', 'Active', 'Done']
 const STORAGE_KEY = 'student-todo'
+const RADIUS = 52 // ring radius in the 120x120 SVG viewBox
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS
 
 // only the open tab lives in the browser; tasks and categories live on the server.
 // It may name a category that no longer exists, so the load effect below corrects it.
@@ -134,6 +136,11 @@ export default function App() {
     .filter((t) => filter === 'All' || (filter === 'Done') === t.done)
     .sort((a, b) => a.done - b.done || (a.due || '9999').localeCompare(b.due || '9999'))
 
+  // progress covers the whole open tab, not the Active/Done filter, so the ring doesn't jump around
+  const inTab = tasks.filter((t) => t.category === tab)
+  const doneCount = inTab.filter((t) => t.done).length
+  const percent = inTab.length ? Math.round((doneCount / inTab.length) * 100) : 0
+
   return (
     <main>
       <h1>Student To-Do</h1>
@@ -209,6 +216,7 @@ export default function App() {
         ))}
       </div>
 
+      <div className="layout">
       <ul key={tab + filter} className="stack">
         {visible.map((t, i) => (
           <li
@@ -247,6 +255,32 @@ export default function App() {
           </li>
         )}
       </ul>
+
+      <aside
+        className="progress"
+        role="progressbar"
+        aria-label={`${tab} progress`}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={percent}
+      >
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle className="track" cx="60" cy="60" r={RADIUS} />
+          <circle
+            className="fill"
+            cx="60"
+            cy="60"
+            r={RADIUS}
+            strokeDasharray={CIRCUMFERENCE}
+            strokeDashoffset={CIRCUMFERENCE * (1 - percent / 100)}
+          />
+        </svg>
+        <div className="progress-text">
+          <strong>{percent}%</strong>
+          <span>{inTab.length ? `${doneCount} of ${inTab.length} done` : 'No tasks yet'}</span>
+        </div>
+      </aside>
+      </div>
     </main>
   )
 }
