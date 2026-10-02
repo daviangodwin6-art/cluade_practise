@@ -32,6 +32,79 @@ async function api(path, options) {
 // local date as YYYY-MM-DD, same format <input type="date"> gives us
 const today = () => new Date().toLocaleDateString('en-CA')
 
+const pad = (n) => String(n).padStart(2, '0')
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+// month grid (Monday first) of all tasks, with a detail list for the selected day
+function Calendar({ tasks, onToggle }) {
+  const now = today()
+  const [month, setMonth] = useState(now.slice(0, 7)) // YYYY-MM
+  const [selected, setSelected] = useState(now)
+  const [y, m] = month.split('-').map(Number)
+  const shift = (d) => {
+    const next = new Date(y, m - 1 + d, 1)
+    setMonth(`${next.getFullYear()}-${pad(next.getMonth() + 1)}`)
+  }
+  const lead = (new Date(y, m - 1, 1).getDay() + 6) % 7 // blanks before the 1st
+  const days = new Date(y, m, 0).getDate()
+  const dayKey = (d) => `${month}-${pad(d)}`
+  const onDay = (key) => tasks.filter((t) => t.due === key)
+  const picked = onDay(selected)
+
+  return (
+    <aside className="calendar" aria-label="Calendar">
+      <div className="cal-head">
+        <button onClick={() => shift(-1)} aria-label="Previous month">‹</button>
+        <strong>{new Date(y, m - 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</strong>
+        <button onClick={() => shift(1)} aria-label="Next month">›</button>
+      </div>
+      <div className="cal-grid">
+        {WEEKDAYS.map((w) => (
+          <span key={w} className="cal-wd">{w[0]}</span>
+        ))}
+        {Array.from({ length: lead }, (_, i) => (
+          <span key={'b' + i} />
+        ))}
+        {Array.from({ length: days }, (_, i) => {
+          const key = dayKey(i + 1)
+          const list = onDay(key)
+          const open = list.filter((t) => !t.done).length
+          return (
+            <button
+              key={key}
+              className={['cal-day', key === now && 'today', key === selected && 'picked'].filter(Boolean).join(' ')}
+              aria-pressed={key === selected}
+              aria-label={`${key}, ${list.length} tasks`}
+              onClick={() => setSelected(key)}
+            >
+              {i + 1}
+              {list.length > 0 && <i className={open ? 'dot' : 'dot all-done'} />}
+            </button>
+          )
+        })}
+      </div>
+      <button className="cal-today" onClick={() => { setMonth(now.slice(0, 7)); setSelected(now) }}>
+        Today
+      </button>
+      <div className="cal-detail">
+        <h2>{selected}</h2>
+        {picked.length === 0 && <p className="empty">No tasks due.</p>}
+        <ul>
+          {picked.map((t) => (
+            <li key={t.id} className={t.done ? 'done' : t.due < now ? 'overdue' : ''}>
+              <label>
+                <input type="checkbox" checked={t.done} onChange={() => onToggle(t)} />
+                <span className="title">{t.title}</span>
+              </label>
+              <small>{t.category}</small>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </aside>
+  )
+}
+
 export default function App() {
   const [tasks, setTasks] = useState([])
   const [categories, setCategories] = useState([])
@@ -256,6 +329,7 @@ export default function App() {
         )}
       </ul>
 
+      <div className="side">
       <aside
         className="progress"
         role="progressbar"
@@ -280,6 +354,8 @@ export default function App() {
           <span>{inTab.length ? `${doneCount} of ${inTab.length} done` : 'No tasks yet'}</span>
         </div>
       </aside>
+      <Calendar tasks={tasks} onToggle={toggle} />
+      </div>
       </div>
     </main>
   )

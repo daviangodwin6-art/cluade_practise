@@ -6,6 +6,7 @@ A simple to-do list web app for students, built with React and Vite. Tasks are g
 
 - Category tabs with a badge counting unfinished tasks; add, rename or delete categories from the links under the tabs (a category that still has tasks can't be deleted, and the last one is kept)
 - A circular progress ring beside the list (green fill on a grey track) shows how many tasks in the open category are done, and fills as you complete them
+- A month calendar on the right (always visible, all categories) marks days that have tasks due; click a day to see its tasks, tick them off, or step through months
 - Add tasks with an optional due date
 - Tick tasks off (they sink to the bottom) or delete them
 - Sorted by due date; overdue tasks turn red

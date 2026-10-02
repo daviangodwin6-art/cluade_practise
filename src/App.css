@@ -36,7 +36,7 @@ body {
 }
 
 main {
-  max-width: 840px;
+  max-width: 1040px;
   margin: 0 auto;
   padding: 24px 16px 64px;
 }
@@ -295,17 +295,22 @@ form button {
   padding: 32px 0;
 }
 
-/* task list on the left, progress ring on the right */
+/* task list on the left; ring and calendar stacked in a sticky right column */
 .layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 200px;
+  grid-template-columns: minmax(0, 1fr) 280px;
   gap: 24px;
   align-items: start;
 }
 
-.progress {
+.side {
   position: sticky;
   top: 24px;
+  display: grid;
+  gap: 16px;
+}
+
+.progress {
   display: grid;
   place-items: center;
   padding: 20px;
@@ -358,14 +363,131 @@ form button {
     grid-template-columns: 1fr;
   }
 
-  .progress {
-    order: -1; /* ring above the list on narrow screens */
+  .side {
+    display: contents; /* ring above the list, calendar below it */
     position: static;
+  }
+
+  .progress {
+    order: -1;
   }
 
   .progress svg {
     max-width: 130px;
   }
+}
+
+/* calendar */
+.calendar {
+  padding: 16px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+
+.cal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.cal-head button,
+.cal-today {
+  background: none;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 2px 10px;
+  cursor: pointer;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  text-align: center;
+}
+
+.cal-wd {
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.cal-day {
+  position: relative;
+  aspect-ratio: 1;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.cal-day.today {
+  border-color: var(--accent);
+}
+
+.cal-day.picked {
+  background: var(--accent);
+  color: var(--card);
+}
+
+.dot {
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  border-radius: 50%;
+  background: var(--danger);
+}
+
+.dot.all-done {
+  background: var(--green);
+}
+
+.cal-today {
+  margin-top: 8px;
+  font-size: 0.8rem;
+}
+
+.cal-detail h2 {
+  font-size: 0.95rem;
+  margin: 12px 0 4px;
+}
+
+.cal-detail ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.cal-detail li {
+  display: grid;
+  gap: 2px;
+  font-size: 0.9rem;
+}
+
+.cal-detail li.done .title {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+
+.cal-detail li.overdue .title {
+  color: var(--danger);
+}
+
+.cal-detail small {
+  color: var(--muted);
+  padding-left: 24px;
+}
+
+.cal-detail .empty {
+  padding: 8px 0;
+  font-size: 0.85rem;
 }
 
 @media (prefers-reduced-motion: reduce) {
